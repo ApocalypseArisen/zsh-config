@@ -3,8 +3,11 @@ ZSH_WORKSPACE="$HOME/.zsh/zsh-config"
 # Autocompletion system
 autoload -U compinit; compinit
 
+# Arrow keys for autocompletion
+zstyle ':completion:*' menu select
+
 # Colors
-autoload -U colors && colors
+source $ZSH_WORKSPACE/themes/colors.zsh
 
 # History config
 export HISTSIZE=10000
