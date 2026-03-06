@@ -1,44 +1,50 @@
-# af-magic.zsh-theme
-#
-# Author: Andy Fleming
+# ------------------------------------------------
+# Modernized af-magic theme
+# 
+# Original theme by: Andy Fleming
 # URL: http://andyfleming.com/
+# ------------------------------------------------
 
-# git settings
-ZSH_THEME_GIT_PROMPT_PREFIX=" ${FG[075]}(${FG[078]}"
+# Git prompt configuration
+ZSH_THEME_GIT_PROMPT_PREFIX=" %F{75}(%F{78}"
 ZSH_THEME_GIT_PROMPT_CLEAN=""
-ZSH_THEME_GIT_PROMPT_DIRTY="${FG[214]}*%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="${FG[075]})%{$reset_color%}"
+ZSH_THEME_GIT_PROMPT_DIRTY="%F{214}*"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%F{75})%f"
 
-# virtualenv settings
-ZSH_THEME_VIRTUALENV_PREFIX=" ${FG[075]}["
-ZSH_THEME_VIRTUALENV_SUFFIX="]%{$reset_color%}"
+# Venv prompt configuration
+ZSH_THEME_VIRTUALENV_PREFIX=" %F{75}["
+ZSH_THEME_VIRTUALENV_SUFFIX="]%f"
 
-# dashed separator size
-function afmagic_dashes {
-  # check either virtualenv or condaenv variables
-  local python_env_dir="${VIRTUAL_ENV:-$CONDA_DEFAULT_ENV}"
+# Calculate and draw appropriate number of dashes to fill the terminal width,
+afmagic_separator() {
+  local time=${(%):-%D{%H:%M:%S}}
   local python_env="${python_env_dir##*/}"
-
-  # if there is a python virtual environment and it is displayed in
-  # the prompt, account for it when returning the number of dashes
+  local prefix="- $time "
+  local dash_count=$(( COLUMNS - ${#prefix} ))
+  
+  # Make sure venv is accounted for in the dash count
   if [[ -n "$python_env" && "$PS1" = *\(${python_env}\)* ]]; then
-    echo $(( COLUMNS - ${#python_env} - 3 ))
+    dash_count=$(( dash_count - ${#python_env} - 3 ))
   elif [[ -n "$VIRTUAL_ENV_PROMPT" && "$PS1" = *${VIRTUAL_ENV_PROMPT}* ]]; then
-    echo $(( COLUMNS - ${#VIRTUAL_ENV_PROMPT} - 3 ))
-  else
-    echo $COLUMNS
+    dash_count=$(( dash_count - ${#VIRTUAL_ENV_PROMPT} - 3 ))
   fi
+
+  local dash_count=$(( COLUMNS - ${#prefix} ))
+  local dashes=${(l:$dash_count::-:)}
+  
+  print -r -- "$prefix$dashes"
 }
 
-# primary prompt: dashed separator, directory and vcs info
-PS1="${FG[237]}\${(l.\$(afmagic_dashes)..-.)}%{$reset_color%}
-${FG[032]}%~\$(git_prompt_info) ${FG[105]}%(!.#.»)%{$reset_color%} "
-PS2="%{$fg[red]%}\ %{$reset_color%}"
+# Prompt
+PS1='$(print -P "%F{237}$(afmagic_separator)%f")
+%F{32}%~$(git_prompt_info) %F{105}%(!.#.»)%f '
+PS2='%F{red}\ %f'
 
-# right prompt: return code, virtualenv and context (user@host)
-RPS1="%(?..%{$fg[red]%}%? ↵%{$reset_color%})"
+# Right prompt: return code, virtualenv and context (user@host)
+RPROMPT='%(?..%F{red}%? ↵%f)'
+
 if (( $+functions[virtualenv_prompt_info] )); then
-  RPS1+='$(virtualenv_prompt_info)'
+  RPROMPT+='$(virtualenv_prompt_info)'
 fi
-RPS1+=" ${FG[237]}%n@%m%{$reset_color%}"
 
+RPROMPT+=' %F{237}%n@%m%f'
